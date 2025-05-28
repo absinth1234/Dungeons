@@ -421,10 +421,9 @@ class DungeonRPGTester:
             else:
                 print("Inventory is empty")
         return success, response
-        if not self.dungeon_id:
-            print("❌ No dungeon ID available for getting dungeon data")
-            return False, {}
         
+    def test_get_dungeon(self):
+        """Test retrieving dungeon data"""
         success, response = self.run_test(
             "Get Dungeon Data",
             "GET",
