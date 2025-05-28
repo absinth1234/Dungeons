@@ -48,9 +48,9 @@ class DungeonResponse(BaseModel):
     difficulty: str
     theme: str
     rooms: List[Dict[str, Any]]
-    treasures: List[Dict[str, int]]
+    treasures: List[Dict[str, Any]]
     enemies: List[Dict[str, Any]]
-    traps: List[Dict[str, int]]
+    traps: List[Dict[str, Any]]
 
 class GameState(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
