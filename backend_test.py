@@ -396,8 +396,31 @@ class DungeonRPGTester:
         
         return len([r for r in results if r["found_enemy"]]) > 0
 
-    def test_get_dungeon(self):
-        """Test retrieving dungeon data"""
+    def test_get_game_state(self):
+        """Test retrieving game state"""
+        if not self.game_id:
+            print("❌ No game ID available for getting game state")
+            return False, {}
+        
+        success, response = self.run_test(
+            "Get Game State",
+            "GET",
+            f"game/{self.game_id}",
+            200
+        )
+        if success:
+            print(f"Player Position: ({response.get('player_x')}, {response.get('player_y')})")
+            print(f"Player Stats: HP={response.get('player_hp')}, ATK={response.get('player_attack')}, DEF={response.get('player_defense')}, MAG={response.get('player_magic')}, AGI={response.get('player_agility')}")
+            
+            # Check inventory
+            inventory = response.get('inventory', [])
+            if inventory:
+                print(f"Inventory Items: {len(inventory)}")
+                for item in inventory:
+                    print(f"  - {item.get('name', 'Unknown Item')} {item.get('emoji', '')}")
+            else:
+                print("Inventory is empty")
+        return success, response
         if not self.dungeon_id:
             print("❌ No dungeon ID available for getting dungeon data")
             return False, {}
