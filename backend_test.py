@@ -12,6 +12,8 @@ class DungeonRPGTester:
         self.tests_passed = 0
         self.dungeon_id = None
         self.game_id = None
+        self.hero_class = None
+        self.hero_gender = None
 
     def run_test(self, name, method, endpoint, expected_status, data=None):
         """Run a single API test"""
