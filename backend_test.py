@@ -80,22 +80,88 @@ class DungeonRPGTester:
             print(f"Number of Enemies: {len(response.get('enemies', []))}")
         return success, response
 
-    def test_start_game(self):
-        """Test starting a game with the generated dungeon"""
+    def test_get_heroes(self):
+        """Test retrieving all hero classes and genders"""
+        success, response = self.run_test(
+            "Get Heroes",
+            "GET",
+            "heroes",
+            200
+        )
+        if success:
+            hero_classes = response.keys()
+            print(f"Available Hero Classes: {', '.join(hero_classes)}")
+            
+            # Check if we have all 5 hero classes
+            expected_classes = ["wizard", "knight", "hunter", "thief", "peasant"]
+            all_classes_present = all(hero_class in hero_classes for hero_class in expected_classes)
+            
+            if all_classes_present:
+                print("✅ All 5 hero classes are available")
+                
+                # Check if each class has both genders
+                all_genders_present = True
+                for hero_class in expected_classes:
+                    genders = response.get(hero_class, {}).keys()
+                    if "male" not in genders or "female" not in genders:
+                        all_genders_present = False
+                        print(f"❌ {hero_class} is missing a gender option")
+                
+                if all_genders_present:
+                    print("✅ All hero classes have both gender options")
+                    
+                    # Check if each hero has the correct dice
+                    dice_correct = True
+                    expected_dice = {
+                        "wizard": {"sides": 8, "count": 2},
+                        "knight": {"sides": 6, "count": 3},
+                        "hunter": {"sides": 10, "count": 2},
+                        "thief": {"sides": 12, "count": 2},
+                        "peasant": {"sides": 6, "count": 1}
+                    }
+                    
+                    for hero_class, dice in expected_dice.items():
+                        male_hero = response.get(hero_class, {}).get("male", {})
+                        if male_hero.get("dice_sides") != dice["sides"] or male_hero.get("dice_count") != dice["count"]:
+                            dice_correct = False
+                            print(f"❌ {hero_class} has incorrect dice: {male_hero.get('dice_count')}d{male_hero.get('dice_sides')}, expected {dice['count']}d{dice['sides']}")
+                    
+                    if dice_correct:
+                        print("✅ All hero classes have correct dice configurations")
+            else:
+                print("❌ Some hero classes are missing")
+                
+            return success, response
+        return False, {}
+
+    def test_start_game(self, hero_class="wizard", hero_gender="male"):
+        """Test starting a game with the generated dungeon and selected hero"""
         if not self.dungeon_id:
             print("❌ No dungeon ID available for starting game")
             return False, {}
         
+        self.hero_class = hero_class
+        self.hero_gender = hero_gender
+        
         success, response = self.run_test(
-            "Start Game",
+            f"Start Game with {hero_class.capitalize()} ({hero_gender})",
             "POST",
             f"start-game?dungeon_id={self.dungeon_id}",
-            200
+            200,
+            data={"hero_class": hero_class, "gender": hero_gender}
         )
         if success:
             self.game_id = response.get('id')
             print(f"Game ID: {self.game_id}")
             print(f"Player Position: ({response.get('player_x')}, {response.get('player_y')})")
+            print(f"Hero Stats: HP={response.get('player_hp')}, ATK={response.get('player_attack')}, DEF={response.get('player_defense')}, MAG={response.get('player_magic')}, AGI={response.get('player_agility')}")
+            
+            # Verify hero stats match the expected values
+            hero_stats = response.get('hero_stats', {})
+            if hero_stats:
+                print(f"Hero Emoji: {hero_stats.get('emoji')}")
+                print(f"Hero Name: {hero_stats.get('name')}")
+                print(f"Hero Dice: {hero_stats.get('dice_count')}d{hero_stats.get('dice_sides')}")
         return success, response
 
     def test_get_game_state(self):
